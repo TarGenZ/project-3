@@ -10,7 +10,7 @@ import AuthModal from '../ui/AuthModal.jsx'
 
 // ── Year colour palette ───────────────────────────────────────────────────────
 const YEAR_PALETTE = [
-  { color: '#0ABFBC', dash: 'none' }, { color: '#6366F1', dash: 'none' },
+  { color: '#7C3AED', dash: 'none' }, { color: '#6366F1', dash: 'none' },
   { color: '#F59E0B', dash: 'none' }, { color: '#22C55E', dash: 'none' },
   { color: '#EF4444', dash: 'none' }, { color: '#EC4899', dash: 'none' },
   { color: '#8B5CF6', dash: 'none' }, { color: '#14B8A6', dash: 'none' },
@@ -145,7 +145,7 @@ function CutoffGraph({ quotaId, quotaName }) {
       <YearLegend years={years} />
       {statTiles && (
         <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
-          <StatTile label="Avg Closing AIR"    value={statTiles.avg.toLocaleString('en-IN')}               color="#0ABFBC" />
+          <StatTile label="Avg Closing AIR"    value={statTiles.avg.toLocaleString('en-IN')}               color="#7C3AED" />
           <StatTile label="Most Competitive"   value={statTiles.mostCompetitive.toLocaleString('en-IN')}   color="#22C55E" />
           <StatTile label="Least Competitive"  value={statTiles.leastCompetitive.toLocaleString('en-IN')}  color="#F59E0B" />
           {statTiles.yoyLabel && <StatTile label="Year-over-Year" value={statTiles.yoyLabel} color={statTiles.yoyColor} />}
