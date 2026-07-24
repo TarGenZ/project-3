@@ -14,59 +14,57 @@ export default function GettingInSection({ quotas, collegeName }) {
   if (!quotas.length) return null
 
   const selectedQuotaObj = quotas.find(q => q.id === selectedQuota)
-  const bands = computeChanceBands(cutoffs)
+  const bands     = computeChanceBands(cutoffs)
   const narrative = buildTrendNarrative(collegeName, selectedQuotaObj?.name || '', cutoffs)
 
+  const CHANCE_BANDS = [
+    { key: 'high',     label: 'High Chance',     sub: 'Qualified every year',      color: '#22C55E', bgCls: 'bg-green-500/8 border-green-500/25', textCls: 'text-green-500', range: bands ? `< ${bands.high.max.toLocaleString('en-IN')}` : null },
+    { key: 'moderate', label: 'Moderate Chance',  sub: 'Qualified some years',      color: '#F59E0B', bgCls: 'bg-amber/8 border-amber/25',         textCls: 'text-amber',     range: bands ? `${bands.moderate.min.toLocaleString('en-IN')}–${bands.moderate.max.toLocaleString('en-IN')}` : null },
+    { key: 'low',      label: 'Low Chance',       sub: 'Did not qualify any year',  color: '#EF4444', bgCls: 'bg-danger/8 border-danger/25',        textCls: 'text-danger',    range: bands ? `> ${bands.low.min.toLocaleString('en-IN')}` : null },
+  ]
+
   return (
-    <div className="info-section">
-      <p className="section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div className="mb-3 rounded-xl border border-line/20 bg-panel p-4">
+      <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-violet">
         <Target size={15} /> Getting In
       </p>
 
-      <div className="quota-tabs" style={{ marginBottom: 14 }}>
+      {/* Quota tabs */}
+      <div className="mb-3.5 flex flex-wrap gap-1.5">
         {quotas.map(q => (
-          <button key={q.id} className={`quota-tab ${selectedQuota === q.id ? 'active' : ''}`} onClick={() => setSelectedQuota(q.id)}>
-            {q.quota_type === 'state' && <span className="badge badge-state" style={{ padding: '1px 6px', fontSize: 10, marginRight: 6 }}>State</span>}
+          <button key={q.id} onClick={() => setSelectedQuota(q.id)}
+            className={`rounded-lg border px-3.5 py-1.5 text-sm font-medium transition ${
+              selectedQuota === q.id
+                ? 'border-violet bg-violet/15 text-violet'
+                : 'border-line/20 text-white/60 hover:border-violet/40 hover:text-violet'
+            }`}>
+            {q.quota_type === 'state' && (
+              <span className="mr-1.5 rounded-full bg-orange-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-orange-400">State</span>
+            )}
             {q.name}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <p style={{ fontSize: 13, color: 'var(--slate-light)' }}>Loading…</p>
+        <p className="text-sm text-white/60">Loading…</p>
       ) : !bands ? (
-        <p style={{ fontSize: 13, color: 'var(--slate-light)' }}>No cutoff data available for {selectedQuotaObj?.name} yet.</p>
+        <p className="text-sm text-white/60">No cutoff data available for {selectedQuotaObj?.name} yet.</p>
       ) : (
         <>
-          <p style={{ fontSize: 13, color: 'var(--slate-light)', marginBottom: 14 }}>
+          <p className="mb-3.5 text-sm text-white/60">
             {selectedQuotaObj?.name} chance bands based on {bands.yearsTracked} year{bands.yearsTracked === 1 ? '' : 's'} of closing rank data
           </p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 14 }}>
-            <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 10, padding: 16, textAlign: 'center' }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--success)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>High Chance</p>
-              <p className="mono" style={{ fontSize: 18, fontWeight: 700 }}>&lt; {bands.high.max.toLocaleString('en-IN')}</p>
-              <p style={{ fontSize: 11, color: 'var(--slate-light)', marginTop: 4 }}>Qualified every year</p>
-            </div>
-            <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 10, padding: 16, textAlign: 'center' }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--amber)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Moderate Chance</p>
-              <p className="mono" style={{ fontSize: 18, fontWeight: 700 }}>
-                {bands.moderate.min.toLocaleString('en-IN')}–{bands.moderate.max.toLocaleString('en-IN')}
-              </p>
-              <p style={{ fontSize: 11, color: 'var(--slate-light)', marginTop: 4 }}>Qualified some years</p>
-            </div>
-            <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: 16, textAlign: 'center' }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--danger)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Low Chance</p>
-              <p className="mono" style={{ fontSize: 18, fontWeight: 700 }}>
-                &gt; {bands.low.min.toLocaleString('en-IN')}
-              </p>
-              <p style={{ fontSize: 11, color: 'var(--slate-light)', marginTop: 4 }}>Did not qualify in any year</p>
-            </div>
+          <div className="mb-3.5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {CHANCE_BANDS.map(b => (
+              <div key={b.key} className={`rounded-xl border p-4 text-center ${b.bgCls}`}>
+                <p className={`mb-1.5 text-xs font-bold uppercase tracking-[0.5px] ${b.textCls}`}>{b.label}</p>
+                <p className="font-mono text-lg font-bold text-white">{b.range}</p>
+                <p className="mt-1 text-[11px] text-white/50">{b.sub}</p>
+              </div>
+            ))}
           </div>
-
-          {narrative && (
-            <p style={{ fontSize: 13, color: 'var(--slate-light)', lineHeight: 1.6 }}>{narrative}</p>
-          )}
+          {narrative && <p className="text-sm leading-relaxed text-white/60">{narrative}</p>}
         </>
       )}
     </div>

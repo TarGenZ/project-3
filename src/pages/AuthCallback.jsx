@@ -42,7 +42,7 @@ export default function AuthCallback() {
           <p style={{ fontSize: 14, color: 'var(--slate-light)', marginBottom: 20 }}>
             That took longer than expected — please try again.
           </p>
-          <a href="/" className="btn btn-primary">Back to home</a>
+          <a href="/" className="inline-flex items-center gap-2 rounded-lg bg-violet px-4 py-2 text-sm font-semibold text-[#fff] transition hover:bg-violet-soft">Back to home</a>
         </div>
       ) : (
         <div>

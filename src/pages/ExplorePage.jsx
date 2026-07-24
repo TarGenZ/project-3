@@ -3,214 +3,165 @@ import { useColleges } from '../hooks/useData'
 import CollegeCard from '../components/explorer/CollegeCard'
 import { Search } from 'lucide-react'
 
-const states = [
-  'Andaman And Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 
-  'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadra And Nagar Haveli', 'Delhi', 'Goa', 
-  'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu And Kashmir', 'Jharkhand', 
-  'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 
-  'Mizoram', 'Nagaland', 'Odisha', 'Puducherry', 'Punjab', 'Rajasthan', 'Sikkim', 
-  'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+const STATES = [
+  'Andaman And Nicobar Islands','Andhra Pradesh','Arunachal Pradesh','Assam',
+  'Bihar','Chandigarh','Chhattisgarh','Dadra And Nagar Haveli','Delhi','Goa',
+  'Gujarat','Haryana','Himachal Pradesh','Jammu And Kashmir','Jharkhand',
+  'Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya',
+  'Mizoram','Nagaland','Odisha','Puducherry','Punjab','Rajasthan','Sikkim',
+  'Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal',
 ]
-const TYPES = ['government', 'private', 'deemed']
+const TYPES        = ['government', 'private', 'deemed']
 const SORT_OPTIONS = [
-  { value: 'final_rating', label: 'Top Rated' },
-  { value: 'fees_asc', label: 'Lowest Fees' },
-  { value: 'fees_desc', label: 'Highest Fees' },
-  { value: 'year_asc', label: 'Oldest' },
-  { value: 'name', label: 'A–Z' },
+  { value: 'final_rating', label: 'Top Rated'    },
+  { value: 'fees_asc',     label: 'Lowest Fees'  },
+  { value: 'fees_desc',    label: 'Highest Fees' },
+  { value: 'year_asc',     label: 'Oldest'       },
+  { value: 'name',         label: 'A–Z'          },
 ]
+
+const CHIP_BASE   = 'px-3 py-1 rounded-full text-sm font-medium border border-line/20 bg-transparent text-white/60 cursor-pointer transition hover:border-violet/40 hover:text-violet'
+const CHIP_ACTIVE = 'bg-violet/15 border-violet text-violet'
+const INPUT_CLS   = 'w-full bg-white/5 border border-line/20 rounded-lg text-white px-3.5 py-2 text-sm outline-none transition placeholder:text-white/30 focus:border-violet/60 focus:bg-violet/5'
 
 export default function ExplorePage() {
   const { colleges, loading } = useColleges()
-  const [search, setSearch] = useState('')
-  const [filterTypes, setFilterTypes] = useState([])
+  const [search,       setSearch]       = useState('')
+  const [filterTypes,  setFilterTypes]  = useState([])
   const [filterStates, setFilterStates] = useState([])
-  const [sortBy, setSortBy] = useState('final_rating')
-  const [minRating, setMinRating] = useState(0)
-  const [stateSearch, setStateSearch] = useState('')
+  const [sortBy,       setSortBy]       = useState('final_rating')
+  const [minRating,    setMinRating]    = useState(0)
+  const [stateSearch,  setStateSearch]  = useState('')
 
-  const toggleFilter = (list, setList, val) =>
+  const toggle = (list, setList, val) =>
     setList(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val])
 
-  const filteredStatesList = useMemo(() => {
-    return states.filter(s => s.toLowerCase().includes(stateSearch.toLowerCase()))
-  }, [stateSearch])
+  const filteredStates = useMemo(
+    () => STATES.filter(s => s.toLowerCase().includes(stateSearch.toLowerCase())),
+    [stateSearch],
+  )
 
   const filtered = useMemo(() => {
     let list = [...colleges]
-    if (search) list = list.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.city?.toLowerCase().includes(search.toLowerCase()) || c.state?.toLowerCase().includes(search.toLowerCase()))
-    if (filterTypes.length) list = list.filter(c => filterTypes.includes(c.type))
+    if (search)              list = list.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.city?.toLowerCase().includes(search.toLowerCase()) || c.state?.toLowerCase().includes(search.toLowerCase()))
+    if (filterTypes.length)  list = list.filter(c => filterTypes.includes(c.type))
     if (filterStates.length) list = list.filter(c => filterStates.includes(c.state))
-    if (minRating > 0) list = list.filter(c => (c.final_rating || 0) >= minRating)
+    if (minRating > 0)       list = list.filter(c => (c.final_rating || 0) >= minRating)
     list.sort((a, b) => {
       if (sortBy === 'final_rating') return (b.final_rating || 0) - (a.final_rating || 0)
-      if (sortBy === 'fees_asc') return (a.annual_fees || 0) - (b.annual_fees || 0)
-      if (sortBy === 'fees_desc') return (b.annual_fees || 0) - (a.annual_fees || 0)
-      if (sortBy === 'year_asc') return (a.year_established || 0) - (b.year_established || 0)
-      if (sortBy === 'name') return a.name.localeCompare(b.name)
+      if (sortBy === 'fees_asc')     return (a.annual_fees || 0)  - (b.annual_fees || 0)
+      if (sortBy === 'fees_desc')    return (b.annual_fees || 0)  - (a.annual_fees || 0)
+      if (sortBy === 'year_asc')     return (a.year_established || 0) - (b.year_established || 0)
+      if (sortBy === 'name')         return a.name.localeCompare(b.name)
       return 0
     })
     return list
   }, [colleges, search, filterTypes, filterStates, sortBy, minRating])
 
+  const hasFilters = filterTypes.length || filterStates.length || minRating > 0
+
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <h1 className="page-title">Explore MBBS Colleges</h1>
-        <p className="page-sub">{filtered.length} colleges found</p>
+    <div className="max-w-page mx-auto px-4 sm:px-6">
+      {/* Page header */}
+      <div className="mb-4 border-b border-line/20 py-5">
+        <h1 className="text-3xl font-extrabold tracking-tight text-white">Explore MBBS Colleges</h1>
+        <p className="mt-1 text-sm text-white/60">{filtered.length} colleges found</p>
       </div>
 
-      <div className="explorer-layout">
-        {/* Filter Panel */}
-        <aside className="filter-panel">
-          <p style={{ fontWeight: 700, marginBottom: 16, fontSize: 14 }}>Filters</p>
+      <div className="grid grid-cols-1 items-start gap-6 py-5 md:grid-cols-[280px_1fr]">
+        {/* ── Filter panel ─────────────────────────────────────────── */}
+        <aside className="rounded-xl border border-line/20 bg-panel p-4 md:sticky md:top-[88px]">
+          <p className="mb-4 text-sm font-bold text-white">Filters</p>
 
-          <div className="filter-section">
-            <p className="filter-title">College Type</p>
-            <div className="filter-chips">
+          {/* Type */}
+          <div className="mb-4 border-b border-line/20 pb-4">
+            <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[1px] text-white/40">College Type</p>
+            <div className="flex flex-wrap gap-1.5">
               {TYPES.map(t => (
-                <button key={t} className={`chip ${filterTypes.includes(t) ? 'active' : ''}`}
-                  onClick={() => toggleFilter(filterTypes, setFilterTypes, t)}>
+                <button key={t} onClick={() => toggle(filterTypes, setFilterTypes, t)}
+                  className={`${CHIP_BASE} ${filterTypes.includes(t) ? CHIP_ACTIVE : ''}`}>
                   {t.charAt(0).toUpperCase() + t.slice(1)}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Theme-Integrated Scrollable State Filter Section */}
-          <div className="filter-section">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <p className="filter-title" style={{ margin: 0 }}>State</p>
+          {/* State */}
+          <div className="mb-4 border-b border-line/20 pb-4">
+            <div className="mb-1.5 flex items-center justify-between">
+              <p className="text-[11px] font-bold uppercase tracking-[1px] text-white/40">State</p>
               {filterStates.length > 0 && (
-                <span className="mono" style={{ fontSize: 11, color: 'var(--teal)', fontWeight: 600 }}>
-                  ({filterStates.length} selected)
-                </span>
+                <span className="font-mono text-[11px] font-semibold text-violet">({filterStates.length} selected)</span>
               )}
             </div>
-
-            {/* Inline Search Bar for States */}
-            <div style={{ position: 'relative', marginBottom: 6 }}>
-              <input 
-                type="text"
-                placeholder="Search state..."
-                value={stateSearch}
-                onChange={e => setStateSearch(e.target.value)}
-                className="field-input"
-                style={{
-                  padding: '6px 10px',
-                  fontSize: '13px',
-                  borderRadius: 'var(--radius-sm)'
-                }}
-              />
-            </div>
-            
-            {/* Scrollable Container matching your theme */}
-            <div 
-              className="scrollable-filter-list" 
-              style={{ 
-                maxHeight: '180px', 
-                overflowY: 'auto', 
-                border: '1px solid var(--border)', 
-                borderRadius: 'var(--radius-sm)',
-                padding: '6px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px',
-                backgroundColor: 'var(--navy-light)'
-              }}
-            >
-              {filteredStatesList.length === 0 ? (
-                <div className="muted" style={{ fontSize: '13px', textAlign: 'center', padding: '12px 0' }}>
-                  No states found
-                </div>
-              ) : (
-                filteredStatesList.map(s => {
-                  const formattedName = s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-                  const isChecked = filterStates.includes(s);
-                  
+            <input type="text" placeholder="Search state..." value={stateSearch}
+              onChange={e => setStateSearch(e.target.value)} className={`${INPUT_CLS} mb-1.5`} />
+            <div className="flex max-h-[180px] flex-col gap-1 overflow-y-auto rounded-lg border border-line/20 bg-mid p-1.5">
+              {filteredStates.length === 0
+                ? <p className="py-3 text-center text-sm text-white/40">No states found</p>
+                : filteredStates.map(s => {
+                  const checked = filterStates.includes(s)
                   return (
-                    <label 
-                      key={s} 
-                      style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '10px', 
-                        fontSize: '13.5px',
-                        cursor: 'pointer',
-                        padding: '6px 8px',
-                        borderRadius: '6px',
-                        backgroundColor: isChecked ? 'var(--white-dim)' : 'transparent',
-                        transition: 'background 0.15s ease',
-                        userSelect: 'none'
-                      }}
-                    >
-                      <input 
-                        type="checkbox" 
-                        checked={isChecked}
-                        onChange={() => toggleFilter(filterStates, setFilterStates, s)}
-                        style={{ 
-                          cursor: 'pointer',
-                          accentColor: 'var(--teal)',
-                          width: '14px',
-                          height: '14px'
-                        }}
-                      />
-                      <span style={{ 
-                        fontWeight: isChecked ? 600 : 400, 
-                        color: isChecked ? 'var(--white)' : 'var(--slate-light)' 
-                      }}>
-                        {formattedName}
+                    <label key={s} className={`flex cursor-pointer select-none items-center gap-2.5 rounded-md px-2 py-1.5 text-[13.5px] transition hover:bg-white/5 ${checked ? 'bg-white/5' : ''}`}>
+                      <input type="checkbox" checked={checked} onChange={() => toggle(filterStates, setFilterStates, s)}
+                        className="cursor-pointer accent-violet" style={{ width: 14, height: 14 }} />
+                      <span className={checked ? 'font-semibold text-white' : 'text-white/60'}>
+                        {s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                       </span>
                     </label>
-                  );
-                })
-              )}
+                  )
+                })}
             </div>
           </div>
 
-          <div className="filter-section">
-            <p className="filter-title">Min Rating</p>
-            <div className="filter-chips">
+          {/* Min Rating */}
+          <div className="mb-4 border-b border-line/20 pb-4">
+            <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[1px] text-white/40">Min Rating</p>
+            <div className="flex flex-wrap gap-1.5">
               {[0, 7, 8, 9].map(v => (
-                <button key={v} className={`chip ${minRating === v ? 'active' : ''}`} onClick={() => setMinRating(v)}>
+                <button key={v} onClick={() => setMinRating(v)}
+                  className={`${CHIP_BASE} ${minRating === v ? CHIP_ACTIVE : ''}`}>
                   {v === 0 ? 'All' : `${v}+`}
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="filter-section">
-            <p className="filter-title">Sort By</p>
-            <select className="field-input" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+          {/* Sort */}
+          <div className="mb-4">
+            <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[1px] text-white/40">Sort By</p>
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className={INPUT_CLS}>
               {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
 
-          {(filterTypes.length || filterStates.length || minRating > 0) && (
-            <button className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }}
-              onClick={() => { setFilterTypes([]); setFilterStates([]); setMinRating(0); setStateSearch(''); }}>
+          {hasFilters && (
+            <button onClick={() => { setFilterTypes([]); setFilterStates([]); setMinRating(0); setStateSearch('') }}
+              className="w-full rounded-lg bg-white/5 px-4 py-2 text-sm text-white/60 transition hover:bg-white/10 hover:text-white">
               Clear All Filters
             </button>
           )}
         </aside>
 
-        {/* Main Content */}
+        {/* ── College grid ─────────────────────────────────────────── */}
         <div>
-          <div className="search-bar" style={{ marginBottom: '24px' }}>
-            <Search size={16} color="var(--slate)" />
-            <input placeholder="Search college name, city, or state…" value={search} onChange={e => setSearch(e.target.value)} />
+          <div className="mb-6 flex items-center gap-2.5 rounded-lg border border-line/20 bg-white/5 px-3.5 py-2.5 transition focus-within:border-violet/60">
+            <Search size={16} className="text-white/40" />
+            <input placeholder="Search college name, city, or state…" value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/30" />
           </div>
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: 80, color: 'var(--slate-light)' }}>Loading colleges…</div>
+            <p className="py-20 text-center text-sm text-white/60">Loading colleges…</p>
           ) : filtered.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon"><Search size={48} color="var(--white)" /></div>
-              <p className="empty-state-title">No colleges match your filters</p>
-              <p>Try adjusting your search or clearing filters.</p>
+            <div className="py-20 text-center">
+              <Search size={48} className="mx-auto mb-3 text-white/20" />
+              <p className="mb-1 text-lg font-semibold text-white">No colleges match your filters</p>
+              <p className="text-sm text-white/60">Try adjusting your search or clearing filters.</p>
             </div>
           ) : (
-            <div className="college-grid">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               {filtered.map(c => <CollegeCard key={c.id} college={c} />)}
             </div>
           )}

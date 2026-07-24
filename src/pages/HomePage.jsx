@@ -3,84 +3,88 @@ import { useColleges } from '../hooks/useData'
 import { Search, TrendingUp, Shield, BarChart2, ArrowRight, Hospital, Target, Scale, BookOpen } from 'lucide-react'
 
 const FEATURES = [
-  { icon: <Search size={22} />, title: 'Explore Colleges', desc: 'Filter 600+ MBBS colleges by state, type, rating, and fees.' },
-  { icon: <BarChart2 size={22} />, title: 'Cutoff Trends', desc: 'Interactive charts showing rank trends across rounds and years.' },
-  { icon: <TrendingUp size={22} />, title: '10-Parameter Rating', desc: 'Transparent ratings for location, ROI, faculty, hostel & more.' },
-  { icon: <Shield size={22} />, title: 'All Quota Coverage', desc: 'General, OBC, SC, ST, EWS — both All India and State quota data.' },
+  { icon: <Search size={22} />,    title: 'Explore Colleges',     desc: 'Filter 600+ MBBS colleges by state, type, rating, and fees.' },
+  { icon: <BarChart2 size={22} />, title: 'Cutoff Trends',        desc: 'Interactive charts showing rank trends across rounds and years.' },
+  { icon: <TrendingUp size={22}/>, title: '10-Parameter Rating',  desc: 'Transparent ratings for location, ROI, faculty, hostel & more.' },
+  { icon: <Shield size={22} />,    title: 'All Quota Coverage',   desc: 'General, OBC, SC, ST, EWS — both All India and State quota data.' },
+]
+const TOOLS = [
+  { to: '/explore',           icon: Hospital,   title: 'College Explorer',    desc: 'Browse, filter and rate every MBBS college with real cutoff data.',                   status: 'live'  },
+  { to: '/shortlister',       icon: Target,     title: 'College Shortlister', desc: 'Enter your rank & category to get a personalized college shortlist.',                 status: 'soon'  },
+  { to: '/rank-predictor',    icon: TrendingUp, title: 'Rank Predictor',      desc: 'Estimate your All India Rank from your NEET score.',                                   status: 'soon'  },
+  { to: '/college-compare',   icon: Scale,      title: 'College Compare',     desc: 'Compare colleges side-by-side across ratings, fees & cutoffs.',                       status: 'soon'  },
+  { to: '/counselling-guide', icon: BookOpen,   title: 'Counselling Guide',   desc: 'Round-by-round walkthroughs for AIQ & state counselling.',                            status: 'soon'  },
 ]
 
-const TOOLS = [
-  { to: '/explore', icon: Hospital, title: 'College Explorer', desc: 'Browse, filter and rate every MBBS college with real cutoff data.', status: 'live' },
-  { to: '/shortlister', icon: Target, title: 'College Shortlister', desc: 'Enter your rank & category to get a personalized college shortlist.', status: 'soon' },
-  { to: '/rank-predictor', icon: TrendingUp, title: 'Rank Predictor', desc: 'Estimate your All India Rank from your NEET score.', status: 'soon' },
-  { to: '/college-compare', icon: Scale, title: 'College Compare', desc: 'Compare colleges side-by-side across ratings, fees & cutoffs.', status: 'soon' },
-  { to: '/counselling-guide', icon: BookOpen, title: 'Counselling Guide', desc: 'Round-by-round walkthroughs for AIQ & state counselling.', status: 'soon' },
-]
+// Shared Tailwind patterns
+const CARD = 'bg-panel border border-line/20 rounded-xl transition-all hover:border-violet/40 hover:shadow-violet'
+const ICON_BOX = 'w-11 h-11 bg-violet/15 rounded-[10px] flex items-center justify-center text-violet mb-4 flex-shrink-0'
 
 export default function HomePage() {
   const { colleges } = useColleges()
 
   return (
     <div>
-      <div className="hero">
-        <div className="page-container">
-          <p className="hero-eyebrow">India's Most Complete MBBS Database</p>
-          <h1 className="hero-title">
-            Find Your <span>Right Medical</span><br />College
+      {/* ── Hero ─────────────────────────────────────────────────────── */}
+      <section className="hero-glow relative overflow-hidden py-14 text-center md:py-20">
+        <div className="max-w-page mx-auto px-4 sm:px-6">
+          <p className="mb-4 text-[11px] font-bold uppercase tracking-[2px] text-violet">
+            India's Most Complete MBBS Database
+          </p>
+          <h1 className="mb-5 text-[clamp(36px,6vw,64px)] font-extrabold leading-[1.1] tracking-tight text-white">
+            Find Your <span className="text-violet">Right Medical</span>
+            <br />College
           </h1>
-          <p className="hero-sub">
+          <p className="mx-auto mb-9 max-w-[560px] text-lg text-white/60">
             Real cutoff data across all quotas. Transparent ratings. No noise — just the data you need to make the best decision.
           </p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link to="/explore" className="btn btn-primary btn-lg">
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link to="/explore" className="inline-flex items-center gap-2 rounded-lg bg-violet px-7 py-3 text-[15px] font-semibold text-[#fff] transition hover:bg-violet-soft">
               <Search size={16} /> Explore Colleges
             </Link>
-            <Link to="/explore" className="btn btn-secondary btn-lg">View Cutoffs</Link>
+            <Link to="/explore" className="inline-flex items-center gap-2 rounded-lg border border-line/30 bg-panel px-7 py-3 text-[15px] font-semibold text-white/80 transition hover:border-violet/40">
+              View Cutoffs
+            </Link>
           </div>
 
-          <div className="hero-stats">
-            <div>
-              <p className="hero-stat-num">{colleges.length}+</p>
-              <p className="hero-stat-label">Colleges Indexed</p>
-            </div>
-            <div>
-              <p className="hero-stat-num">10</p>
-              <p className="hero-stat-label">Rating Parameters</p>
-            </div>
-            <div>
-              <p className="hero-stat-num">All</p>
-              <p className="hero-stat-label">Quotas Covered</p>
-            </div>
-            <div>
-              <p className="hero-stat-num">3+</p>
-              <p className="hero-stat-label">Years of Data</p>
-            </div>
+          <div className="mt-12 flex flex-wrap justify-center gap-10 md:gap-12">
+            {[
+              { num: `${colleges.length}+`, label: 'Colleges Indexed' },
+              { num: '10',                  label: 'Rating Parameters' },
+              { num: 'All',                 label: 'Quotas Covered' },
+              { num: '3+',                  label: 'Years of Data' },
+            ].map(s => (
+              <div key={s.label}>
+                <p className="font-mono text-[32px] font-extrabold text-violet">{s.num}</p>
+                <p className="mt-1 text-sm text-white/60">{s.label}</p>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="page-container" style={{ padding: '60px 24px 0' }}>
-        <p style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, color: 'var(--teal)', marginBottom: 12 }}>
+      {/* ── Tools grid ───────────────────────────────────────────────── */}
+      <div className="max-w-page mx-auto px-4 pb-0 pt-16 sm:px-6">
+        <p className="mb-3 text-center text-[11px] font-bold uppercase tracking-[2px] text-violet">
           Your NEET UG Toolkit
         </p>
-        <h2 style={{ textAlign: 'center', fontSize: 28, fontWeight: 800, letterSpacing: -1, marginBottom: 40 }}>
+        <h2 className="mb-10 text-center text-[28px] font-extrabold tracking-tight text-white">
           Tools to help you choose right
         </h2>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20, marginBottom: 60 }}>
+        <div className="mb-16 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {TOOLS.map(t => {
             const Icon = t.icon
             return (
-              <Link key={t.to} to={t.to} className="card" style={{ padding: 24, display: 'block', position: 'relative' }}>
+              <Link key={t.to} to={t.to} className={`${CARD} relative block p-6`}>
                 {t.status === 'soon' && (
-                  <span className="badge badge-aia" style={{ position: 'absolute', top: 20, right: 20 }}>Soon</span>
+                  <span className="absolute right-5 top-5 rounded-full bg-violet/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet">
+                    Soon
+                  </span>
                 )}
-                <div style={{ width: 44, height: 44, background: 'var(--teal-dim)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--teal)', marginBottom: 14 }}>
-                  <Icon size={22} />
-                </div>
-                <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>{t.title}</p>
-                <p style={{ fontSize: 14, color: 'var(--slate-light)', lineHeight: 1.6, marginBottom: 14 }}>{t.desc}</p>
-                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--teal)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div className={ICON_BOX}><Icon size={22} /></div>
+                <p className="mb-2 text-base font-bold text-white">{t.title}</p>
+                <p className="mb-4 text-sm leading-relaxed text-white/60">{t.desc}</p>
+                <span className="flex items-center gap-1 text-sm font-semibold text-violet">
                   {t.status === 'live' ? 'Open tool' : 'Learn more'} <ArrowRight size={14} />
                 </span>
               </Link>
@@ -89,33 +93,34 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="page-container" style={{ padding: '0 24px 60px' }}>
-        <p style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, color: 'var(--teal)', marginBottom: 12 }}>
+      {/* ── Features grid ────────────────────────────────────────────── */}
+      <div className="max-w-page mx-auto px-4 pb-16 sm:px-6">
+        <p className="mb-3 text-center text-[11px] font-bold uppercase tracking-[2px] text-violet">
           Why MedExplore
         </p>
-        <h2 style={{ textAlign: 'center', fontSize: 28, fontWeight: 800, letterSpacing: -1, marginBottom: 40 }}>
+        <h2 className="mb-10 text-center text-[28px] font-extrabold tracking-tight text-white">
           Everything you need to choose wisely
         </h2>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map(f => (
-            <div key={f.title} className="card" style={{ padding: 24 }}>
-              <div style={{ width: 44, height: 44, background: 'var(--teal-dim)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--teal)', marginBottom: 16 }}>
-                {f.icon}
-              </div>
-              <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>{f.title}</p>
-              <p style={{ fontSize: 14, color: 'var(--slate-light)', lineHeight: 1.6 }}>{f.desc}</p>
+            <div key={f.title} className={`${CARD} p-6`}>
+              <div className={ICON_BOX}>{f.icon}</div>
+              <p className="mb-2 text-base font-bold text-white">{f.title}</p>
+              <p className="text-sm leading-relaxed text-white/60">{f.desc}</p>
             </div>
           ))}
         </div>
 
-        <div style={{ background: 'var(--navy-light)', border: '1px solid var(--border)', borderRadius: 16, padding: '40px 32px', textAlign: 'center', marginTop: 60 }}>
-          <p style={{ color: 'var(--teal)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>Free Access</p>
-          <h3 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>Start exploring for free</h3>
-          <p style={{ color: 'var(--slate-light)', fontSize: 15, marginBottom: 24 }}>
+        {/* CTA banner */}
+        <div className="mt-16 rounded-2xl border border-line/20 bg-panel px-8 py-10 text-center">
+          <p className="mb-3 text-[11px] font-bold uppercase tracking-[2px] text-violet">Free Access</p>
+          <h3 className="mb-2 text-2xl font-extrabold text-white">Start exploring for free</h3>
+          <p className="mb-6 text-[15px] text-white/60">
             Browse all college info free. Get 1 free cutoff data access on sign up.
           </p>
-          <Link to="/explore" className="btn btn-primary btn-lg">Browse All Colleges <ArrowRight size={16} /></Link>
+          <Link to="/explore" className="inline-flex items-center gap-2 rounded-lg bg-violet px-7 py-3 text-[15px] font-semibold text-[#fff] transition hover:bg-violet-soft">
+            Browse All Colleges <ArrowRight size={16} />
+          </Link>
         </div>
       </div>
     </div>

@@ -3,43 +3,43 @@ import { IMPORT_TYPES, CUTOFF_WIDE_FIXED_COLS, parseSpreadsheetFile, validateRow
 import { bulkUpsertColleges, bulkUpsertQuotas, bulkUpsertCutoffRounds, useColleges } from '../../hooks/useData'
 import { Upload, Download, FileSpreadsheet, CheckCircle2, AlertCircle, X, Loader2 } from 'lucide-react'
 
-const UPLOAD_FN = {
-  colleges: bulkUpsertColleges,
-  quotas: bulkUpsertQuotas,
-  cutoffs: bulkUpsertCutoffRounds,
-}
-
+const UPLOAD_FN = { colleges: bulkUpsertColleges, quotas: bulkUpsertQuotas, cutoffs: bulkUpsertCutoffRounds }
 const TYPE_TABS = [
-  { key: 'colleges', label: 'Colleges' },
-  { key: 'quotas', label: 'Quotas' },
-  { key: 'cutoffs', label: 'Cutoff Rounds' },
+  { key: 'colleges', label: 'Colleges'      },
+  { key: 'quotas',   label: 'Quotas'        },
+  { key: 'cutoffs',  label: 'Cutoff Rounds' },
 ]
-
 const DESCRIPTIONS = {
   colleges: 'Each row is one college. Rating fields (0–10) are optional and default to 5. final_rating is auto-computed. Uploading an existing college name updates it.',
-  quotas: '"college_name" must exactly match an existing college (case-insensitive). Duplicate quota+type combos are skipped.',
-  cutoffs: 'Wide format: one row per college + quota + round number. Each year gets its own column (closing_rank_2023, closing_rank_2024, …). Leave a cell blank if data isn\'t available for that year. Uploading an existing round updates its closing rank.',
+  quotas:   '"college_name" must exactly match an existing college (case-insensitive). Duplicate quota+type combos are skipped.',
+  cutoffs:  "Wide format: one row per college + quota + round number. Each year gets its own column (closing_rank_2023, closing_rank_2024, …). Leave a cell blank if data isn't available for that year. Uploading an existing round updates its closing rank.",
 }
 
+const CARD  = 'rounded-xl border border-line/20 bg-panel p-6 mb-5'
+const BTN_P = 'inline-flex items-center gap-2 rounded-lg bg-violet px-4 py-2 text-sm font-semibold text-[#fff] transition hover:bg-violet-soft disabled:opacity-50 disabled:cursor-not-allowed'
+const BTN_S = 'inline-flex items-center gap-2 rounded-lg border border-line/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-violet/40 hover:bg-white/10 disabled:opacity-50'
+const BTN_G = 'inline-flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 text-sm text-white/60 transition hover:bg-white/10 hover:text-white'
+const TH    = 'text-left text-[11px] font-bold uppercase tracking-[1px] text-white/40 px-3 py-2.5 border-b border-line/20'
+const TD    = 'px-3 py-3 border-b border-line/10 text-sm text-white/80'
+
 export default function BulkImportManager() {
-  const [type, setType] = useState('colleges')
-  const [fileName, setFileName] = useState(null)
-  const [parsing, setParsing] = useState(false)
-  const [parseErrors, setParseErrors] = useState([])
-  const [validRows, setValidRows] = useState([])
-  const [detectedYears, setDetectedYears] = useState([]) // only for cutoffs wide format
-  const [importing, setImporting] = useState(false)
-  const [result, setResult] = useState(null)
-  const fileInputRef = useRef(null)
+  const [type,         setType]         = useState('colleges')
+  const [fileName,     setFileName]     = useState(null)
+  const [parsing,      setParsing]      = useState(false)
+  const [parseErrors,  setParseErrors]  = useState([])
+  const [validRows,    setValidRows]    = useState([])
+  const [detectedYears,setDetectedYears]= useState([])
+  const [importing,    setImporting]    = useState(false)
+  const [result,       setResult]       = useState(null)
+  const fileInputRef  = useRef(null)
   const { refetch: refetchColleges } = useColleges()
 
   const reset = () => {
     setFileName(null); setParseErrors([]); setValidRows([])
-    setResult(null); setDetectedYears([])
+    setResult(null);   setDetectedYears([])
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
-
-  const switchType = (newType) => { setType(newType); reset() }
+  const switchType = (t) => { setType(t); reset() }
 
   const handleFile = async (e) => {
     const file = e.target.files?.[0]
@@ -49,192 +49,149 @@ export default function BulkImportManager() {
       const rawRows = await parseSpreadsheetFile(file)
       if (type === 'cutoffs') {
         const { validRows: valid, errors } = parseCutoffWideRows(rawRows)
-        // Detect which years were found for the preview header
-        const years = [...new Set(valid.map(r => r.year))].sort((a, b) => a - b)
-        setDetectedYears(years)
-        setValidRows(valid)
-        setParseErrors(errors)
+        setDetectedYears([...new Set(valid.map(r => r.year))].sort((a,b) => a - b))
+        setValidRows(valid); setParseErrors(errors)
       } else {
         const config = IMPORT_TYPES[type]
         const { validRows: valid, errors } = validateRows(rawRows, config.columns)
-        setValidRows(valid)
-        setParseErrors(errors)
+        setValidRows(valid); setParseErrors(errors)
       }
     } catch (err) {
-      setParseErrors([{ row: '-', message: `Could not read file: ${err.message}` }])
+      setParseErrors([{ row: 0, errors: [`Failed to parse file: ${err.message}`] }])
+    } finally {
+      setParsing(false)
     }
-    setParsing(false)
   }
 
   const handleImport = async () => {
+    if (!validRows.length) return
     setImporting(true)
-    const { error, ...stats } = await UPLOAD_FN[type](validRows)
-    setImporting(false)
-    setResult({ ...stats, error })
-    if (type === 'colleges') refetchColleges()
+    try {
+      const fn = UPLOAD_FN[type]
+      const res = type === 'cutoffs'
+        ? await fn(validRows)
+        : await fn(validRows)
+      setResult(res)
+      await refetchColleges()
+    } catch (err) {
+      setResult({ error: err.message })
+    } finally {
+      setImporting(false)
+    }
   }
 
-  const config = IMPORT_TYPES[type]
-
-  // Build preview table columns
   const previewCols = type === 'cutoffs'
-    ? ['college_name', 'quota_name', 'quota_type', 'round_number', 'year', 'closing_rank']
-    : config.columns?.map(c => c.key) || []
+    ? [...CUTOFF_WIDE_FIXED_COLS, ...detectedYears.map(y => `closing_rank_${y}`)]
+    : IMPORT_TYPES[type]?.columns?.map(c => c.key) || []
 
   return (
     <div>
-      <h2 className="page-title" style={{ fontSize: 22, marginBottom: 8 }}>Bulk Import</h2>
-      <p className="page-sub" style={{ marginBottom: 20 }}>Upload a CSV or Excel file to add or update many records at once.</p>
+      {/* Type tabs */}
+      <div className={CARD}>
+        <p className="mb-3 text-xs font-bold uppercase tracking-[1px] text-white/40">Import Type</p>
+        <div className="mb-4 flex flex-wrap gap-2">
+          {TYPE_TABS.map(t => (
+            <button key={t.key} onClick={() => switchType(t.key)}
+              className={`rounded-lg border px-4 py-1.5 text-sm font-medium transition ${type === t.key ? 'border-violet bg-violet/15 text-violet' : 'border-line/20 text-white/60 hover:border-violet/40 hover:text-white'}`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-sm leading-relaxed text-white/60">{DESCRIPTIONS[type]}</p>
+      </div>
 
-      <div className="quota-tabs" style={{ marginBottom: 20 }}>
-        {TYPE_TABS.map(t => (
-          <button key={t.key} className={`quota-tab ${type === t.key ? 'active' : ''}`} onClick={() => switchType(t.key)}>
-            {t.label}
+      {/* Upload + download */}
+      <div className={CARD}>
+        <div className="mb-5 flex flex-wrap items-center gap-3">
+          <button className={BTN_S} onClick={() => downloadTemplate(type)}>
+            <Download size={14} /> Download Template
           </button>
-        ))}
-      </div>
-
-      {/* Step 1 */}
-      <div className="card" style={{ padding: 24, marginBottom: 20 }}>
-        <p className="section-title">Step 1 — Get the template</p>
-        <p style={{ fontSize: 14, color: 'var(--slate-light)', marginBottom: 14, lineHeight: 1.6 }}>
-          {DESCRIPTIONS[type]}
-        </p>
-        {type === 'cutoffs' && (
-          <div style={{ background: 'var(--white-dim)', borderRadius: 8, padding: 12, marginBottom: 14, fontSize: 12, color: 'var(--slate-light)', fontFamily: 'DM Mono, monospace', lineHeight: 1.8, overflowX: 'auto' }}>
-            college_name &nbsp;| quota_name | quota_type &nbsp;| round_number | closing_rank_2023 | closing_rank_2024 | closing_rank_2025<br />
-            AIIMS Delhi &nbsp; | UR &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | all_india &nbsp; | 1 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 32 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 35 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 33<br />
-            AIIMS Delhi &nbsp; | UR &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | all_india &nbsp; | 2 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 38 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 42 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 40
-          </div>
-        )}
-        <button className="btn btn-secondary" onClick={() => downloadTemplate(type)}>
-          <Download size={14} /> Download {type === 'cutoffs' ? 'Cutoff Rounds' : config.label} Template
-        </button>
-      </div>
-
-      {/* Step 2 */}
-      <div className="card" style={{ padding: 24, marginBottom: 20 }}>
-        <p className="section-title">Step 2 — Upload your file</p>
-        <div style={{ border: '2px dashed var(--border)', borderRadius: 10, padding: 32, textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
-          onClick={() => fileInputRef.current?.click()}
-          onDragOver={e => e.preventDefault()}
-          onDrop={e => { e.preventDefault(); const file = e.dataTransfer.files?.[0]; if (file) handleFile({ target: { files: [file] } }) }}
-        >
-          <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" style={{ display: 'none' }} onChange={handleFile} />
-          <Upload size={28} color="var(--slate-light)" style={{ marginBottom: 10 }} />
-          <p style={{ fontWeight: 600, marginBottom: 4 }}>{fileName || 'Click to upload or drag a file here'}</p>
-          <p style={{ fontSize: 13, color: 'var(--slate-light)' }}>.csv, .xlsx, or .xls</p>
         </div>
 
+        <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-line/30 p-8 text-center transition hover:border-violet/40">
+          <FileSpreadsheet size={36} className="text-white/20" />
+          <div>
+            <p className="font-semibold text-white/70">{fileName || 'Click to upload .xlsx or .csv'}</p>
+            <p className="mt-1 text-xs text-white/40">Supports Excel and CSV formats</p>
+          </div>
+          <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFile} className="hidden" />
+        </label>
+
         {parsing && (
-          <p style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--slate-light)', fontSize: 14 }}>
-            <Loader2 size={14} className="spinner" /> Parsing file…
-          </p>
-        )}
-
-        {!parsing && fileName && (
-          <div style={{ marginTop: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <FileSpreadsheet size={18} color="var(--teal)" />
-              <span style={{ fontSize: 14, fontWeight: 600 }}>{fileName}</span>
-              {type === 'cutoffs' && detectedYears.length > 0 && (
-                <span style={{ fontSize: 12, color: 'var(--teal)', background: 'var(--teal-dim)', borderRadius: 4, padding: '2px 8px' }}>
-                  Years: {detectedYears.join(', ')}
-                </span>
-              )}
-              <button className="btn btn-ghost btn-sm" onClick={reset} style={{ marginLeft: 'auto' }}><X size={13} /></button>
-            </div>
-
-            <div style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--success)' }}>
-                <CheckCircle2 size={14} /> {validRows.length} valid {type === 'cutoffs' ? 'round entries' : `row${validRows.length === 1 ? '' : 's'}`}
-              </span>
-              {parseErrors.length > 0 && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--danger)' }}>
-                  <AlertCircle size={14} /> {parseErrors.length} error{parseErrors.length === 1 ? '' : 's'} (skipped)
-                </span>
-              )}
-            </div>
-
-            {parseErrors.length > 0 && (
-              <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: 12, marginBottom: 12, maxHeight: 160, overflowY: 'auto' }}>
-                {parseErrors.slice(0, 50).map((e, i) => (
-                  <p key={i} style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 4 }}>Row {e.row}: {e.message}</p>
-                ))}
-                {parseErrors.length > 50 && <p style={{ fontSize: 12, color: 'var(--danger)' }}>…and {parseErrors.length - 50} more</p>}
-              </div>
-            )}
-
-            {validRows.length > 0 && (
-              <div className="admin-table-wrap" style={{ marginBottom: 16, maxHeight: 280, overflowY: 'auto' }}>
-                <table className="admin-table">
-                  <thead>
-                    <tr>{previewCols.map(k => <th key={k}>{k}</th>)}</tr>
-                  </thead>
-                  <tbody>
-                    {validRows.slice(0, 20).map((row, i) => (
-                      <tr key={i}>
-                        {previewCols.map(k => (
-                          <td key={k} className={typeof row[k] === 'number' ? 'mono' : ''}>
-                            {row[k] === null || row[k] === '' ? <span style={{ color: 'var(--slate)' }}>—</span> : String(row[k])}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {validRows.length > 20 && (
-                  <p style={{ fontSize: 12, color: 'var(--slate-light)', padding: 10, textAlign: 'center' }}>
-                    …and {validRows.length - 20} more entries
-                  </p>
-                )}
-              </div>
-            )}
-
-            {validRows.length > 0 && !result && (
-              <button className="btn btn-primary" onClick={handleImport} disabled={importing}>
-                {importing ? <><Loader2 size={14} className="spinner" /> Importing…</> : `Import ${validRows.length} ${type === 'cutoffs' ? 'Entries' : `Row${validRows.length === 1 ? '' : 's'}`}`}
-              </button>
-            )}
+          <div className="mt-4 flex items-center gap-2 text-sm text-white/60">
+            <Loader2 size={14} className="animate-spin" /> Parsing file…
           </div>
         )}
       </div>
 
+      {/* Parse errors */}
+      {parseErrors.length > 0 && (
+        <div className="mb-5 rounded-xl border border-danger/30 bg-danger/10 p-4">
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-danger">
+            <AlertCircle size={14} /> {parseErrors.length} row{parseErrors.length > 1 ? 's' : ''} had errors (skipped)
+          </p>
+          <div className="flex max-h-[160px] flex-col gap-1 overflow-y-auto">
+            {parseErrors.map((e, i) => (
+              <p key={i} className="text-xs text-danger/80">Row {e.row}: {e.errors.join(', ')}</p>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Preview + import */}
+      {validRows.length > 0 && !result && (
+        <div className={CARD}>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-white">{validRows.length} valid rows ready to import</p>
+            <button className={BTN_G} onClick={reset}><X size={13} /> Clear</button>
+          </div>
+
+          <div className="mb-4 max-h-[280px] overflow-auto rounded-lg border border-line/20">
+            <table className="w-full border-collapse text-sm">
+              <thead className="sticky top-0 bg-panel">
+                <tr>{previewCols.map(c => <th key={c} className={TH}>{c}</th>)}</tr>
+              </thead>
+              <tbody>
+                {validRows.slice(0, 20).map((row, i) => (
+                  <tr key={i} className="hover:bg-white/5">
+                    {previewCols.map(c => <td key={c} className={TD}>{row[c] ?? '—'}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {validRows.length > 20 && (
+            <p className="mb-4 text-xs text-white/40">Showing first 20 of {validRows.length} rows</p>
+          )}
+
+          <button className={BTN_P} onClick={handleImport} disabled={importing}>
+            {importing ? <><Loader2 size={14} className="animate-spin" /> Importing…</> : <><Upload size={14} /> Import {validRows.length} rows</>}
+          </button>
+        </div>
+      )}
+
+      {/* Result */}
       {result && (
-        <div className="card" style={{ padding: 24 }}>
-          <p className="section-title">Result</p>
+        <div className={`${CARD} ${result.error ? 'border-danger/30 bg-danger/5' : 'border-green-500/30 bg-green-500/5'}`}>
           {result.error ? (
-            <div className="form-error">{result.error}</div>
+            <div className="flex items-start gap-2 text-danger">
+              <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold">Import failed</p>
+                <p className="mt-1 text-sm">{result.error}</p>
+              </div>
+            </div>
           ) : (
-            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginBottom: result.errors?.length ? 12 : 0 }}>
-              {result.inserted !== undefined && (
-                <div>
-                  <p className="mono teal" style={{ fontSize: 24, fontWeight: 700 }}>{result.inserted}</p>
-                  <p style={{ fontSize: 12, color: 'var(--slate-light)' }}>Inserted</p>
-                </div>
-              )}
-              {result.updated !== undefined && (
-                <div>
-                  <p className="mono amber" style={{ fontSize: 24, fontWeight: 700 }}>{result.updated}</p>
-                  <p style={{ fontSize: 12, color: 'var(--slate-light)' }}>Updated</p>
-                </div>
-              )}
-              {result.skipped !== undefined && (
-                <div>
-                  <p className="mono" style={{ fontSize: 24, fontWeight: 700, color: 'var(--slate-light)' }}>{result.skipped}</p>
-                  <p style={{ fontSize: 12, color: 'var(--slate-light)' }}>Skipped (duplicate)</p>
-                </div>
-              )}
+            <div className="flex items-start gap-2 text-green-500">
+              <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold">Import successful</p>
+                {result.upserted != null && <p className="mt-1 text-sm text-white/60">{result.upserted} records upserted.</p>}
+              </div>
             </div>
           )}
-          {result.errors?.length > 0 && (
-            <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: 12, maxHeight: 160, overflowY: 'auto' }}>
-              {result.errors.slice(0, 50).map((e, i) => (
-                <p key={i} style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 4 }}>{e}</p>
-              ))}
-            </div>
-          )}
-          <button className="btn btn-secondary" style={{ marginTop: 16 }} onClick={reset}>Import Another File</button>
+          <button className={`${BTN_S} mt-4`} onClick={reset}>Import Another File</button>
         </div>
       )}
     </div>
