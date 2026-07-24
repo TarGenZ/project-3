@@ -38,7 +38,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-[100] border-b border-line/20 bg-base/[0.95] backdrop-blur-[20px]">
+      <nav className="sticky top-0 z-[100] border-b border-line/20 bg-base/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-4 px-4 sm:px-6">
 
           {/* Logo */}
@@ -55,13 +55,13 @@ export default function Navbar() {
           {/* Desktop nav */}
           <div className="hidden items-center gap-1 md:flex">
             <Link to="/"
-              className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition ${location.pathname === '/' ? 'bg-white/10 text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'}`}>
+              className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition ${location.pathname === '/' ? 'bg-panel text-white' : 'text-white/60 hover:bg-panel hover:text-white'}`}>
               Home
             </Link>
 
             {/* Hover-triggered Tools dropdown */}
             <div className="relative" onMouseEnter={menuEnter} onMouseLeave={menuLeave}>
-              <button className={`flex items-center gap-1 rounded-lg px-3.5 py-1.5 text-sm font-medium transition ${isToolsActive ? 'bg-white/10 text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'}`}>
+              <button className={`flex items-center gap-1 rounded-lg px-3.5 py-1.5 text-sm font-medium transition ${isToolsActive ? 'bg-panel text-white' : 'text-white/60 hover:bg-panel hover:text-white'}`}>
                 Tools
                 <ChevronDown size={13} className={`transition-transform duration-200 ${toolsHover ? 'rotate-180' : ''}`} />
               </button>
@@ -71,7 +71,7 @@ export default function Navbar() {
                     const Icon = t.icon
                     return (
                       <Link key={t.to} to={t.to}
-                        className="flex items-start gap-3 rounded-lg px-3 py-2.5 transition hover:bg-white/5">
+                        className="flex items-start gap-3 rounded-lg px-3 py-2.5 transition hover:bg-panel">
                         <span className="mt-0.5 text-white/60"><Icon size={17} /></span>
                         <span className="flex-1">
                           <span className="flex items-center gap-2 text-sm font-semibold text-white">
@@ -147,7 +147,7 @@ export default function Navbar() {
           <div className="animate-fade-in border-t border-line/20 bg-base px-4 pb-6 pt-3 md:hidden">
             {/* Tools accordion */}
             <button onClick={() => setToolsExpanded(v => !v)}
-              className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-white/60 transition hover:bg-white/5 hover:text-white">
+              className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-white/60 transition hover:bg-panel hover:text-white">
               Tools
               <ChevronDown size={15} className={`transition-transform duration-200 ${toolsExpanded ? 'rotate-180' : ''}`} />
             </button>
@@ -157,7 +157,7 @@ export default function Navbar() {
                   const Icon = t.icon
                   return (
                     <Link key={t.to} to={t.to}
-                      className="flex items-center justify-between rounded-lg px-2.5 py-2 text-sm text-white/60 transition hover:bg-white/5 hover:text-white">
+                      className="flex items-center justify-between rounded-lg px-2.5 py-2 text-sm text-white/60 transition hover:bg-panel hover:text-white">
                       <span className="flex items-center gap-2"><Icon size={14} />{t.label}</span>
                       {t.status === 'soon' && (
                         <span className="rounded-full bg-violet/15 px-1.5 py-0.5 text-[10px] font-semibold text-violet">Soon</span>
@@ -169,7 +169,7 @@ export default function Navbar() {
             )}
 
             <Link to="/"
-              className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition ${location.pathname === '/' ? 'bg-white/10 text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'}`}>
+              className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition ${location.pathname === '/' ? 'bg-panel text-white' : 'text-white/60 hover:bg-panel hover:text-white'}`}>
               Home
             </Link>
 
