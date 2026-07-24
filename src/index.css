@@ -72,6 +72,9 @@ input, select, textarea { font-family: inherit; }
 [data-theme="light"] .bg-mid       { background-color: #E2E8F0; }
 
 [data-theme="light"] .text-white         { color: #0F1B2D; }
+[data-theme="light"] .text-white\/90     { color: rgba(15,27,45,0.90); }
+[data-theme="light"] .text-white\/85     { color: rgba(15,27,45,0.85); }
+[data-theme="light"] .text-white\/80     { color: rgba(15,27,45,0.80); }
 [data-theme="light"] .text-white\/70     { color: rgba(15,27,45,0.70); }
 [data-theme="light"] .text-white\/60     { color: rgba(15,27,45,0.60); }
 [data-theme="light"] .text-white\/50     { color: rgba(15,27,45,0.50); }
